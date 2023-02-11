@@ -1,17 +1,26 @@
-# HTML
-# Archive your static HTML project and save it with the build record.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
+inputs:
+artifactName: 'html-project'
+pathToPublish: '$(build.artifactStagingDirectory)'
 
-trigger:
-- main
-
-pool:
-  vmImage: ubuntu-latest
-
-steps:
-- task: ArchiveFiles@2
-  inputs:
-    rootFolderOrFile: '$(build.sourcesDirectory)'
-    includeRootFolder: false
-- task: PublishBuildArtifacts@1
+task: NodeTool@0
+inputs:
+versionSpec: '10.x'
+script: |
+echo "Installing dependencies..."
+npm install
+displayName: 'Install dependencies'
+script: |
+echo "Running tests..."
+npm test
+displayName: 'Run tests'
+task: CopyFiles@2
+inputs:
+SourceFolder: '$(build.sourcesDirectory)/dist'
+TargetFolder: '$(build.artifactStagingDirectory)/html-project/dist'
+displayName: 'Copy compiled files to artifact directory'
+task: AzureWebApp@1
+inputs:
+azureSubscription: '<Azure Subscription Name>'
+appName: '<Azure Web App Name>'
+package: '$(build.artifactStagingDirectory)/html-project/dist'
+displayName: 'Deploy to Azure Web App'
